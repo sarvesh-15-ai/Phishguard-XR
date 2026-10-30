@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "PhishGuard-XR Protection Agent",
+  "version": "1.0.0",
+  "description": "Zero-trust, privacy-preserving live browser protection system against phishing, fake logins, and credential theft.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:8007/*",
+    "http://127.0.0.1:8007/*",
+    "http://localhost:8005/*",
+    "http://127.0.0.1:8005/*",
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*"
+  ],
+  "icons": {
+    "16": "public/icons/icon16.png",
+    "48": "public/icons/icon48.png",
+    "128": "public/icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "public/popup.html",
+    "default_title": "PhishGuard-XR Status",
+    "default_icon": {
+      "16": "public/icons/icon16.png",
+      "48": "public/icons/icon48.png",
+      "128": "public/icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background/serviceWorker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/domExtractor.js", "src/content/preSubmitInterceptor.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["public/warning.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

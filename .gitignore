@@ -1,0 +1,63 @@
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+
+# Node dependencies & builds
+node_modules/
+dist/
+build/
+.next/
+out/
+.npm/
+
+# Python compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Large Model Checkpoints & Binary Weights (exceeds GitHub 100MB limit)
+outputs/best_model.pt
+*.pt
+*.bin
+*.onnx
+
+# macOS & OS metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Unrelated standalone folders
+apology-website/
+
+# Research Papers, Study Guides & Architectural Documentation (Excluded from Git)
+PhishGuard-XR_IEEE_Paper.md
+PhishGuard-XR_IEEE_Paper.html
+PhishGuard-X_Whitepaper.md
+Literature_Survey_Review.md
+PhishGuard_XR_Master_Study_Guide.md
+System_Design_and_Architecture.md
+phishguard_xr_architecture_blueprint.md
+PROJECT_REPORT_SOURCE_CODE.md
+PROJECT_WORKFLOW_REPORT.md
+convert_to_pdf.py

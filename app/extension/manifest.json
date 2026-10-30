@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "PhishGuard-X Enterprise Scanner",
+  "version": "1.0",
+  "description": "Enterprise-grade Phishing Detection Powered by Quad-Modal AI",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "http://localhost:8000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Scan Page with PhishGuard-X"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

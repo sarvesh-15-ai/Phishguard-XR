@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-slate-850: #162032;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+  
+  --color-safe: #10b981;
+  --color-low: #3b82f6;
+  --color-medium: #f59e0b;
+  --color-high: #f97316;
+  --color-critical: #ef4444;
+}
+
+@layer base {
+  :root {
+    --background: #020617; /* slate-950 */
+    --foreground: #f8fafc; /* slate-50 */
+    
+    --card: #0f172a; /* slate-900 */
+    --card-foreground: #f8fafc;
+    
+    --border: #1e293b; /* slate-800 */
+    --input: #1e293b;
+    
+    --primary: #3b82f6; /* blue-500 */
+    --primary-foreground: #ffffff;
+    
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8; /* slate-400 */
+    
+    --glass-border: rgba(255, 255, 255, 0.1);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 0.5rem;
+  }
+}

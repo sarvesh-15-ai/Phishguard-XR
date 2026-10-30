@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishGuard-XR Protection Agent</title>
+  <style>
+    body {
+      width: 340px;
+      margin: 0;
+      padding: 16px;
+      background-color: #020617;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+    .logo span { color: #3b82f6; }
+    .status-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 14px;
+      background: #0f172a;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+    .metric-label { color: #94a3b8; }
+    .metric-value { font-weight: 700; font-family: monospace; }
+    textarea, input[type="text"] {
+      width: 100%;
+      background: #020617;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+    }
+    textarea { height: 70px; resize: none; }
+    .file-input-wrapper {
+      margin-bottom: 8px;
+    }
+    input[type="file"] {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .result-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #020617;
+      border: 1px solid #334155;
+      font-size: 11px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">PHISHGUARD<span>-XR</span></div>
+    <div class="status-badge" id="protectionStatus">Active</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-web">🌐 Webpage</button>
+    <button class="tab-btn" data-tab="tab-qr">📷 QR Code</button>
+    <button class="tab-btn" data-tab="tab-sms">💬 SMS / Email</button>
+  </div>
+
+  <!-- TAB 1: WEBPAGE SCANNER -->
+  <div class="tab-content active" id="tab-web">
+    <div class="card">
+      <div class="metric-row">
+        <span class="metric-label">Active Domain:</span>
+        <span class="metric-value" id="domainDisplay">Loading...</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Zero-PII Privacy:</span>
+        <span class="metric-value" style="color: #10b981;">ENABLED</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Pre-Submit Guard:</span>
+        <span class="metric-value" style="color: #10b981;">ARMED</span>
+      </div>
+    </div>
+    <button class="btn" id="reScanBtn">Scan Current Page</button>
+  </div>
+
+  <!-- TAB 2: QR CODE SCANNER -->
+  <div class="tab-content" id="tab-qr">
+    <div class="card">
+      <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">Upload or paste QR Code Image:</div>
+      <div class="file-input-wrapper">
+        <input type="file" id="qrFileInput" accept="image/*">
+      </div>
+      <button class="btn" id="scanQrBtn">Decode & Scan QR Code</button>
+      <div id="qrResultBox" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SMS / EMAIL SCANNER -->
+  <div class="tab-content" id="tab-sms">
+    <div class="card">
+      <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">Paste SMS message or Email Content:</div>
+      <textarea id="smsTextInput" placeholder="Paste SMS (e.g. 'URGENT: Your bank account is suspended. Verify at http://bank-verify.xyz')"></textarea>
+      <button class="btn" id="scanSmsBtn">Analyze SMS / Email</button>
+      <div id="smsResultBox" class="result-box"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
