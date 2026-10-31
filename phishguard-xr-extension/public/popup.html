@@ -156,10 +156,12 @@
   <!-- TAB 2: QR CODE SCANNER -->
   <div class="tab-content" id="tab-qr">
     <div class="card">
-      <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">Upload or paste QR Code Image:</div>
+      <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">Upload QR Code Image:</div>
       <div class="file-input-wrapper">
         <input type="file" id="qrFileInput" accept="image/*">
       </div>
+      <div style="font-size: 10px; color: #64748b; margin: 6px 0; text-align: center;">— OR test specific URL —</div>
+      <input type="text" id="qrDirectUrl" placeholder="Optional URL (e.g. https://google.com)">
       <button class="btn" id="scanQrBtn">Decode & Scan QR Code</button>
       <div id="qrResultBox" class="result-box"></div>
     </div>
