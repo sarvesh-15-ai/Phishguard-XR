@@ -109,7 +109,7 @@ function showRichSecurityCard(data) {
 
   const urlEvidence = (data.evidence && data.evidence.url_evidence) || [];
   const domEvidence = (data.evidence && data.evidence.dom_evidence) || [];
-  const allEvidence = [...urlEvidence, ...domEvidence];
+  const allEvidence = Array.isArray(data.evidence) ? data.evidence : [...urlEvidence, ...domEvidence];
 
   let evidenceHtml = '';
   if (allEvidence.length > 0 && (isHigh || isSuspicious)) {
