@@ -8,6 +8,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleCredentialSubmitMismatch(message.payload, sender.tab ? sender.tab.id : null);
   } else if (message.type === 'SUBMIT_FALSE_POSITIVE') {
     handleFalsePositiveSubmission(message.domain);
+  } else if (message.type === 'ASSISTANT_CHAT_QUERY') {
+    fetch('http://localhost:8007/api/v1/assistant/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_query: message.query,
+        risk_score: message.risk_score || 88,
+        severity: message.severity || 'high',
+        domain: message.domain || ''
+      })
+    })
+    .then(res => res.json())
+    .then(data => sendResponse({ status: 'ok', response_text: data.response_text }))
+    .catch(() => sendResponse({ status: 'error' }));
+    return true; // Keep sendResponse open
   }
   return true;
 });

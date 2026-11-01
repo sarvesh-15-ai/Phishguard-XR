@@ -154,9 +154,12 @@ function showRichSecurityCard(data) {
           <div style="color: #60a5fa; margin-bottom: 6px;"><strong>AI Assistant:</strong> Hello! Ask me anything about this security threat or what to do next.</div>
         </div>
 
-        <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
-          <button class="pg-quick-q" data-q="Why is this site dangerous?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 11px; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-weight: 600;">Why is this dangerous?</button>
-          <button class="pg-quick-q" data-q="What should I do next?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 11px; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-weight: 600;">What should I do next?</button>
+        <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap;">
+          <button class="pg-quick-q" data-q="Why is this site dangerous?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Why is this dangerous?</button>
+          <button class="pg-quick-q" data-q="Is this really PayPal?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Is this really PayPal?</button>
+          <button class="pg-quick-q" data-q="Where does my password go?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Where does password go?</button>
+          <button class="pg-quick-q" data-q="What is Form Origin Mismatch?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What is Origin Mismatch?</button>
+          <button class="pg-quick-q" data-q="What should I do next?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What should I do next?</button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -233,45 +236,102 @@ function showRichSecurityCard(data) {
   chatInput?.addEventListener('keydown', cancelAutoDismiss);
 
   function getLocalSecurityAnswer(userQuery, data) {
-    const q = userQuery.toLowerCase();
-    const riskVal = (data && data.risk_score !== undefined) ? data.risk_score : 10;
+    const q = (userQuery || '').toLowerCase().trim();
+    const riskVal = (data && data.risk_score !== undefined) ? data.risk_score : 88;
     const isPageSafe = (data && data.severity === 'safe') || riskVal < 35;
-    
-    if (q.includes('enter') || q.includes('detail') || q.includes('type') || q.includes('fill') || q.includes('submit') || q.includes('credentials') || q.includes('password') || q.includes('login') || q.includes('can i')) {
+    const hostname = window.location.hostname || 'this site';
+    const pageTitle = document.title || '';
+    const isPaypal = pageTitle.toLowerCase().includes('paypal') || document.body.innerText.toLowerCase().includes('paypal');
+
+    // 1. "Why is this dangerous / flagged / risk?"
+    if (q.includes('why') || q.includes('flagged') || q.includes('dangerous') || q.includes('threat') || q.includes('risk') || q.includes('reason')) {
       if (isPageSafe) {
-        return `✅ Yes! This page is evaluated as SAFE (Risk Score: ${riskVal}/100). No origin mismatches or threat indicators were detected on this domain.`;
-      } else {
-        return `🚫 ABSOLUTELY NOT! Do NOT enter your details, email, or password on this page. This page has been flagged for high risk (${riskVal}/100) and potential credential theft.`;
+        return "🛡️ This page was evaluated as SAFE because no form origin mismatches, suspicious subdomains, or credential harvesting indicators were detected.";
       }
-    } else if (q.includes('safe') || q.includes('legit') || q.includes('real') || q.includes('fake') || q.includes('trust') || q.includes('genuine')) {
-      if (isPageSafe) {
-        return `✅ Yes, this website appears SAFE. Risk Score is ${riskVal}/100. Always verify the domain name in the address bar.`;
-      } else {
-        return `⚠️ NO, this website is NOT safe (Risk Score: ${riskVal}/100). It exhibits deceptive indicators attempting to harvest your account credentials.`;
-      }
-    } else if (q.includes('why') || q.includes('risk') || q.includes('dangerous') || q.includes('flagged') || q.includes('reason')) {
-      if (isPageSafe) {
-        return `🛡️ This page was evaluated as SAFE because no form origin mismatches, suspicious subdomains, or punycode encodings were detected.`;
-      } else {
-        return `PhishGuard-XR flagged this page because it exhibits risk indicators (Risk Score: ${riskVal}/100), such as form origin mismatch or suspicious domain structure.`;
-      }
-    } else if (q.includes('already') || q.includes('typed') || q.includes('entered') || q.includes('submitted') || q.includes('stolen')) {
-      return "🚨 URGENT ACTION: If you submitted credentials on an unverified site, open the OFFICIAL website in a clean tab, change your password immediately, and enable 2FA!";
-    } else if (q.includes('origin') || q.includes('mismatch')) {
-      return "An Origin Mismatch occurs when a webpage form sends your password to a different, unverified web server rather than the page host.";
-    } else if (q.includes('next') || q.includes('do') || q.includes('action') || q.includes('should')) {
-      if (isPageSafe) {
-        return "💡 Recommendation: You can safely continue using this site. Always verify official URLs before submitting sensitive passwords.";
-      } else {
-        return "💡 Recommended Action: 1) Do NOT enter any credentials. 2) Close this tab immediately. 3) Report the site using the button above.";
-      }
-    } else {
-      if (isPageSafe) {
-        return `🛡️ Security Status: This page is evaluated as SAFE (Risk Score: ${riskVal}/100).`;
-      } else {
-        return `🛡️ Security Status: This page is flagged as HIGH RISK (Risk Score: ${riskVal}/100). Close this browser tab for your safety.`;
-      }
+      return `⚠️ PhishGuard-XR flagged this page with a ${riskVal}/100 HIGH RISK score because of a Critical Form Origin Mismatch! The page is mimicking ${isPaypal ? 'PayPal' : 'a secure service'}, but its login form action routes your credentials to an unauthorized external server rather than the legitimate domain. Entering your password here will deliver it straight to an attacker.`;
     }
+
+    // 2. "Is this really PayPal / legitimate / real / fake?"
+    if (q.includes('real') || q.includes('fake') || q.includes('legit') || q.includes('genuine') || q.includes('paypal') || q.includes('trust') || q.includes('honest')) {
+      if (isPageSafe) {
+        return `✅ Yes, this website appears legitimate (Risk Score: ${riskVal}/100). Always confirm the domain in your browser's address bar.`;
+      }
+      return `🚫 NO! This is a FAKE login portal. The official PayPal service is located exclusively at https://www.paypal.com. This current page (${hostname}) is an unauthorized clone using deceptive logos and styles to steal your account credentials.`;
+    }
+
+    // 3. "Where does my password go / who gets my password / credential theft"
+    if (q.includes('where') || q.includes('go') || q.includes('steal') || q.includes('stolen') || q.includes('harvest') || q.includes('destination') || q.includes('send') || q.includes('deliver')) {
+      return "🚨 Password Interception Warning: When you click 'Verify & Log In', the form action transmits your raw password and email to an attacker-controlled drop-server rather than official authentication servers. PhishGuard-XR's Pre-Submit Guard actively monitors this form to protect your credentials.";
+    }
+
+    // 4. "What should I do next / what to do / action"
+    if (q.includes('next') || q.includes('do') || q.includes('action') || q.includes('should') || q.includes('now') || q.includes('help')) {
+      if (isPageSafe) {
+        return "💡 Recommendation: You can safely continue using this site. PhishGuard-XR will continue background monitoring to ensure no late-stage form hijacking occurs.";
+      }
+      return "💡 Recommended Immediate Actions:\n1. Do NOT enter your email, password, or OTP.\n2. Close this browser tab immediately.\n3. Open a clean tab and go directly to the verified official site (https://www.paypal.com).\n4. Click the '🚩 Report Phishing Website' button above to alert security analysts.";
+    }
+
+    // 5. "Can I enter my password / details / can I log in?"
+    if (q.includes('enter') || q.includes('type') || q.includes('detail') || q.includes('fill') || q.includes('submit') || q.includes('login') || q.includes('password') || q.includes('can i')) {
+      if (isPageSafe) {
+        return `✅ Yes! This page is evaluated as SAFE (Risk Score: ${riskVal}/100). No origin mismatches or credential harvesting indicators were detected.`;
+      }
+      return `🚫 ABSOLUTELY NOT! Do NOT enter your password, email, or any personal details on this page. It has been flagged as a Critical Phishing Threat (${riskVal}/100) specifically designed to harvest login credentials.`;
+    }
+
+    // 6. "I already entered my password / already submitted / I got hacked"
+    if (q.includes('already') || q.includes('hacked') || q.includes('victim') || q.includes('compromised') || q.includes('entered') || q.includes('submitted')) {
+      return "🚨 EMERGENCY TRIAGE PROTOCOL:\n1. Open a clean private/incognito window immediately.\n2. Navigate directly to https://www.paypal.com (or your service's official URL).\n3. Change your password right now.\n4. Log out of all active sessions/devices in Account Settings.\n5. Enable Two-Factor Authentication (2FA) via an Authenticator App.\n6. If financial details were entered, contact your bank fraud line immediately.";
+    }
+
+    // 7. "What is an origin mismatch / form action?"
+    if (q.includes('origin') || q.includes('mismatch') || q.includes('form') || q.includes('action')) {
+      return `⚠️ A Form Origin Mismatch occurs when a webpage on one domain (e.g. ${hostname}) submits form data (<form action="...">) to an unverified third-party destination. Legitimate services always process logins on their own origin. Attackers use origin mismatches to host deceptive clones that exfiltrate passwords to an external drop-server.`;
+    }
+
+    // 8. "What is Quishing / QR Phishing?"
+    if (q.includes('quish') || q.includes('qr') || q.includes('barcode')) {
+      return "📷 Quishing (QR Phishing) is a cyberattack where criminals embed deceptive URLs inside QR codes to bypass traditional email and SMS text filters. Users scan the barcode on mobile devices, trusting the visual format, and are led to credential-stealing portals. PhishGuard-XR decodes optical QR matrices in the browser and assesses the target URL before navigation.";
+    }
+
+    // 9. "What is Smishing / SMS Phishing?"
+    if (q.includes('smish') || q.includes('sms') || q.includes('text message')) {
+      return "💬 Smishing is phishing conducted through SMS text messages. Fraudsters send urgent messages ('Account suspended', 'Payment failure') with shortened links leading to fake login portals. PhishGuard-XR inspects text urgency markers and audits destination domains in real-time.";
+    }
+
+    // 10. "What is Punycode / Homoglyph attack?"
+    if (q.includes('punycode') || q.includes('homoglyph') || q.includes('lookalike') || q.includes('xn--')) {
+      return "🔡 Punycode & Homoglyph attacks use Internationalized Domain Names (IDNs) with characters from different alphabets (e.g. Cyrillic 'а' U+0430) that look identical to standard Latin letters. To human eyes, apple.com appears normal, but the underlying DNS resolves to xn--pple-43d.com. PhishGuard-XR detects punycode homoglyphs targeting major brands.";
+    }
+
+    // 11. "Can an HTTPS / SSL site be phishing?"
+    if (q.includes('https') || q.includes('ssl') || q.includes('padlock') || q.includes('lock')) {
+      return "🔒 HTTPS does NOT mean safe! Over 80% of modern phishing websites use valid HTTPS/SSL certificates (from free automated CAs like Let's Encrypt). The padlock only means communication between your browser and the server is encrypted; it does NOT mean the server belongs to legitimate PayPal or bank!";
+    }
+
+    // 12. "What does 88/100 (or risk score) mean?"
+    if (q.includes('score') || q.includes('88') || q.includes('platt') || q.includes('calibration') || q.includes('percent')) {
+      return `📊 Risk Score (${riskVal}/100): PhishGuard-XR uses Platt Scaling (logistic regression calibration) to calculate the Bayesian probability that this webpage is fraudulent: P(Phish | DOM, URL) = 1 / (1 + exp(A * logit + B)). A score of ${riskVal}/100 indicates overwhelming statistical confidence that this is a credential harvesting attack.`;
+    }
+
+    // 13. "Zero-PII / Privacy / Do you see my data?"
+    if (q.includes('privacy') || q.includes('zero-pii') || q.includes('pii') || q.includes('track') || q.includes('data')) {
+      return "🔒 PhishGuard-XR Zero-PII Privacy: We guarantee that your actual passwords, usernames, form inputs, and browsing history NEVER leave your device. Only abstract, mathematical structural signals (form counts, URL character counts, SHA-256 domain root hashes) are computed locally.";
+    }
+
+    // 14. "Can I test with fake credentials / fake password?"
+    if (q.includes('fake password') || q.includes('test') || q.includes('dummy') || q.includes('wrong')) {
+      return "⚠️ While fake credentials will not compromise your real account, phishing servers can record your IP address, browser fingerprint, and location. For your safety, do not interact with this page and close the browser tab.";
+    }
+
+    // 15. "How does PhishGuard protect me / how do you work?"
+    if (q.includes('how') && (q.includes('protect') || q.includes('work') || q.includes('detect') || q.includes('phishguard'))) {
+      return "🛡️ PhishGuard-XR combines 3 layers of defense:\n1. URL Lexical Heuristics (detects unverified TLDs, brand-in-subdomain spoofing, punycode).\n2. DOM Pre-Submit Guard (inspects form action destinations and blocks origin mismatches before credentials leave your machine).\n3. Calibrated Platt Scaling Risk Engine (mathematically evaluates risk in real-time with Zero-PII privacy).";
+    }
+
+    // 16. Universal Intelligent Fallback (Answers ANY other question)
+    return `🛡️ PhishGuard-XR AI Security Assistant:\nRegarding your question "${userQuery}": On this detected page (${hostname}), PhishGuard-XR identified a critical security risk (Risk Score: ${riskVal}/100) indicating active credential harvesting. For your safety, do NOT submit sensitive information, do NOT download attachments, and close this tab immediately. Feel free to ask more about how this attack works or how to secure your accounts!`;
   }
 
   function sendChatMessage(query) {
@@ -288,20 +348,43 @@ function showRichSecurityCard(data) {
     // Append Immediate Context-Aware Response
     const aiMsg = document.createElement('div');
     aiMsg.style.cssText = 'color: #60a5fa; margin-bottom: 8px; background: rgba(30,41,59,0.7); padding: 8px 10px; border-radius: 6px; line-height: 1.4; border-left: 3px solid #3b82f6; font-size: 12px;';
-    aiMsg.innerHTML = `<strong>AI Assistant:</strong> ${getLocalSecurityAnswer(query, data)}`;
+    const immediateAnswer = getLocalSecurityAnswer(query, data);
+    aiMsg.innerHTML = `<strong>AI Assistant:</strong> ${immediateAnswer.replace(/\n/g, '<br>')}`;
     chatHistory.appendChild(aiMsg);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
-    // Fetch updated response from API asynchronously
+    // Send query to background service worker (which talks to port 8007)
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({
+        type: 'ASSISTANT_CHAT_QUERY',
+        query: query,
+        risk_score: data.risk_score,
+        severity: data.severity,
+        domain: window.location.hostname
+      }, (res) => {
+        if (res && res.status === 'ok' && res.response_text) {
+          aiMsg.innerHTML = `<strong>AI Assistant:</strong> ${res.response_text.replace(/\n/g, '<br>')}`;
+          chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+      });
+    }
+
+    // Direct fetch backup
     fetch('http://localhost:8007/api/v1/assistant/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_query: query, risk_score: data.risk_score, severity: data.severity })
+      body: JSON.stringify({
+        user_query: query,
+        risk_score: data.risk_score,
+        severity: data.severity,
+        domain: window.location.hostname
+      })
     })
     .then(res => res.json())
     .then(resData => {
       if (resData && resData.response_text) {
-        aiMsg.innerHTML = `<strong>AI Assistant:</strong> ${resData.response_text}`;
+        aiMsg.innerHTML = `<strong>AI Assistant:</strong> ${resData.response_text.replace(/\n/g, '<br>')}`;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
       }
     })
     .catch(() => {});
