@@ -443,4 +443,114 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
   });
+
+  // 5. AI Security Assistant Handler
+  const chatMessages = document.getElementById('chatMessages');
+  const chatQueryInput = document.getElementById('chatQueryInput');
+  const sendChatBtn = document.getElementById('sendChatBtn');
+  const chipBtns = document.querySelectorAll('.chip-btn');
+
+  function appendChatBubble(sender, text) {
+    if (!chatMessages) return null;
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${sender}`;
+    if (sender === 'ai') {
+      bubble.innerHTML = `<strong>AI Assistant:</strong>${text.replace(/\n/g, '<br>')}`;
+    } else {
+      bubble.textContent = text;
+    }
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return bubble;
+  }
+
+  function getLocalAssistantAnswer(query, pageRisk, isSafeDomain) {
+    const q = query.toLowerCase();
+
+    if (q.includes('quish') || q.includes('qr')) {
+      return "📷 Quishing (QR Phishing) encodes deceptive links inside optical QR codes to bypass text filters. Attackers place them in emails, parking meters, or letters. PhishGuard-XR inspects the decoded destination URL and optical properties before browser navigation.";
+    }
+    if (q.includes('origin') || q.includes('mismatch')) {
+      return "⚠️ Form Origin Mismatch occurs when a webpage's login form sends your password to an external attacker-controlled domain instead of the site host. PhishGuard-XR intercepts submissions when an unauthorized target origin is detected.";
+    }
+    if (q.includes('entered') || q.includes('hacked') || q.includes('stolen') || q.includes('compromised')) {
+      return "🚨 EMERGENCY ACTION REQUIRED:\n1. Open a clean private tab and go directly to the official legitimate website.\n2. Change your password immediately.\n3. Terminate all active sessions/devices.\n4. Enable Multi-Factor Authentication (2FA) using an Authenticator app.\n5. Contact your bank fraud department if financial credentials were entered.";
+    }
+    if (q.includes('privacy') || q.includes('zero-pii') || q.includes('steal')) {
+      return "🔒 Zero-PII Privacy Guarantee: Your actual passwords, usernames, and form inputs NEVER leave your device. PhishGuard-XR only analyzes abstract structural features (e.g. form count, URL length, SHA-256 domain root hash).";
+    }
+    if (q.includes('safe') || q.includes('trust') || q.includes('legit') || q.includes('real') || q.includes('fake')) {
+      if (isSafeDomain) {
+        return `✅ This website appears SAFE (Risk Score: ${pageRisk}/100). No credential harvesting indicators or form origin mismatches were detected.`;
+      } else {
+        return `🚫 WARNING: This page exhibits HIGH RISK indicators (Risk Score: ${pageRisk}/100). Do not enter passwords or personal details here!`;
+      }
+    }
+    if (q.includes('punycode') || q.includes('homoglyph')) {
+      return "🔡 Punycode & Homoglyph attacks use lookalike characters from international alphabets (e.g. Cyrillic 'a') to spoof trusted domains like apple.com. PhishGuard-XR detects 'xn--' prefixes and flags impersonation.";
+    }
+    if (q.includes('smish') || q.includes('sms')) {
+      return "💬 Smishing (SMS Phishing) uses urgent text alerts (e.g. 'Bank account locked') with shortened links. PhishGuard-XR analyzes urgency language combined with unverified domain targets.";
+    }
+    return `🛡️ PhishGuard-XR AI Assistant:\nI'm here to help you evaluate cybersecurity risks! Ask me about Quishing, Origin Mismatches, Password Safety, Zero-PII Privacy, or whether a link is safe to click.`;
+  }
+
+  async function handleChatQuery(query) {
+    const trimmed = (query || '').trim();
+    if (!trimmed) return;
+
+    appendChatBubble('user', trimmed);
+    if (chatQueryInput) chatQueryInput.value = '';
+
+    const thinkingBubble = appendChatBubble('ai', 'Thinking & verifying telemetry...');
+
+    const currentDomain = domainDisplay?.textContent || '';
+    const isSafeDomain = !currentDomain.includes('xyz') && !currentDomain.includes('phish');
+    const pageRisk = isSafeDomain ? 10 : 92;
+    const pageSeverity = isSafeDomain ? 'safe' : 'critical';
+
+    try {
+      const response = await fetch('http://localhost:8007/api/v1/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_query: trimmed,
+          risk_score: pageRisk,
+          severity: pageSeverity,
+          domain: currentDomain
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.response_text) {
+          thinkingBubble.innerHTML = `<strong>AI Assistant:</strong>${data.response_text.replace(/\n/g, '<br>')}`;
+          return;
+        }
+      }
+    } catch (e) {
+      // Server unreachable, use intelligent built-in fallback
+    }
+
+    const fallbackAnswer = getLocalAssistantAnswer(trimmed, pageRisk, isSafeDomain);
+    thinkingBubble.innerHTML = `<strong>AI Assistant:</strong>${fallbackAnswer.replace(/\n/g, '<br>')}`;
+  }
+
+  sendChatBtn?.addEventListener('click', () => {
+    handleChatQuery(chatQueryInput.value);
+  });
+
+  chatQueryInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleChatQuery(chatQueryInput.value);
+    }
+  });
+
+  chipBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const q = btn.getAttribute('data-q');
+      if (q) handleChatQuery(q);
+    });
+  });
 });

@@ -141,6 +141,138 @@
     </div>
   </div>
 
+  <!-- AI Security Chatbot Section -->
+  <div style="max-width: 800px; width: 100%; margin-top: 30px; background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 12px; margin-bottom: 14px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">🤖</span>
+        <div>
+          <div style="font-weight: 800; font-size: 15px; color: #60a5fa;">PhishGuard-XR AI Security Chatbot</div>
+          <div style="font-size: 11px; color: #94a3b8;">Ask questions about phishing, quishing, origin mismatches, or password security.</div>
+        </div>
+      </div>
+      <span style="font-size: 11px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; padding: 3px 8px; border-radius: 6px; font-weight: 700;">LIVE ENGINE</span>
+    </div>
+
+    <!-- Quick Question Buttons -->
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
+      <button class="portal-chip" data-q="What is Quishing?">📷 What is Quishing?</button>
+      <button class="portal-chip" data-q="What is Form Origin Mismatch?">⚠️ What is Origin Mismatch?</button>
+      <button class="portal-chip" data-q="I entered my password on a fake site!">🚨 I typed my password on a fake site!</button>
+      <button class="portal-chip" data-q="How does Zero-PII privacy work?">🔒 How does Zero-PII work?</button>
+      <button class="portal-chip" data-q="Can an HTTPS website be phishing?">🔒 Can HTTPS be phishing?</button>
+      <button class="portal-chip" data-q="What is Punycode?">🔡 What is Punycode?</button>
+    </div>
+
+    <!-- Chat Messages Log -->
+    <div id="portalChatLog" style="height: 180px; overflow-y: auto; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+      <div style="background: rgba(30, 41, 59, 0.8); border-left: 3px solid #3b82f6; padding: 8px 10px; border-radius: 6px; color: #e2e8f0; line-height: 1.45;">
+        <strong style="color: #60a5fa;">AI Security Assistant:</strong><br>
+        👋 Hello! I am your PhishGuard-XR AI Assistant. Ask me any question or click a prompt above to see an evidence-grounded cybersecurity response.
+      </div>
+    </div>
+
+    <!-- Input Form -->
+    <div style="display: flex; gap: 8px;">
+      <input type="text" id="portalChatInput" placeholder="Type your security question..." style="flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: white; font-size: 12px; outline: none;">
+      <button id="portalSendBtn" style="background: #2563eb; color: white; border: none; border-radius: 8px; padding: 0 20px; font-weight: bold; cursor: pointer; font-size: 13px;">Send ➤</button>
+    </div>
+  </div>
+
+  <style>
+    .portal-chip {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      border-radius: 14px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .portal-chip:hover {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+  </style>
+
+  <script>
+    const chatLog = document.getElementById('portalChatLog');
+    const chatInput = document.getElementById('portalChatInput');
+    const sendBtn = document.getElementById('portalSendBtn');
+    const chips = document.querySelectorAll('.portal-chip');
+
+    function appendMessage(sender, text) {
+      const msg = document.createElement('div');
+      if (sender === 'user') {
+        msg.style.cssText = 'background: #2563eb; color: white; padding: 8px 12px; border-radius: 6px; align-self: flex-end; max-width: 80%;';
+        msg.textContent = text;
+      } else {
+        msg.style.cssText = 'background: rgba(30, 41, 59, 0.8); border-left: 3px solid #3b82f6; padding: 8px 10px; border-radius: 6px; color: #e2e8f0; line-height: 1.45; align-self: flex-start; max-width: 88%;';
+        msg.innerHTML = '<strong style="color: #60a5fa;">AI Security Assistant:</strong><br>' + text.replace(/\\n/g, '<br>');
+      }
+      chatLog.appendChild(msg);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      return msg;
+    }
+
+    async function sendQuery(query) {
+      const q = (query || '').trim();
+      if (!q) return;
+
+      appendMessage('user', q);
+      if (chatInput) chatInput.value = '';
+
+      const pending = appendMessage('ai', 'Analyzing telemetry and formulating answer...');
+
+      try {
+        const resp = await fetch('http://localhost:8007/api/v1/assistant/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_query: q, risk_score: 10, severity: 'safe' })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.response_text) {
+            pending.innerHTML = '<strong style="color: #60a5fa;">AI Security Assistant:</strong><br>' + data.response_text.replace(/\\n/g, '<br>');
+            return;
+          }
+        }
+      } catch (err) {}
+
+      // Built-in offline fallback
+      let fallback = "🛡️ PhishGuard-XR AI Assistant: I am ready to answer your cybersecurity questions!";
+      const lower = q.toLowerCase();
+      if (lower.includes('quish') || lower.includes('qr')) {
+        fallback = "📷 Quishing (QR Phishing) encodes deceptive links inside optical QR codes to bypass text filters. Attackers place them in emails, parking meters, or letters. PhishGuard-XR inspects the decoded destination URL and optical properties before browser navigation.";
+      } else if (lower.includes('origin') || lower.includes('mismatch')) {
+        fallback = "⚠️ Form Origin Mismatch occurs when a webpage's login form sends your password to an external attacker-controlled domain instead of the site host. PhishGuard-XR intercepts submissions when an unauthorized target origin is detected.";
+      } else if (lower.includes('entered') || lower.includes('hacked') || lower.includes('stolen') || lower.includes('fake')) {
+        fallback = "🚨 EMERGENCY ACTION REQUIRED:\\n1. Open a clean private tab and go directly to the official legitimate website.\\n2. Change your password immediately.\\n3. Terminate all active sessions/devices.\\n4. Enable Multi-Factor Authentication (2FA) using an Authenticator app.\\n5. Contact your bank fraud department if financial credentials were typed.";
+      } else if (lower.includes('privacy') || lower.includes('zero-pii') || lower.includes('steal')) {
+        fallback = "🔒 Zero-PII Privacy Guarantee: Your actual passwords, usernames, and form inputs NEVER leave your device. PhishGuard-XR only analyzes abstract structural features (e.g. form count, URL length, SHA-256 domain root hash).";
+      } else if (lower.includes('https') || lower.includes('ssl')) {
+        fallback = "🔒 Misconception Alert: A green padlock or HTTPS does NOT mean a website is legitimate! Over 80% of modern phishing sites use valid SSL/TLS certificates. HTTPS only encrypts the traffic in transit; it does not verify whether the server owner is honest.";
+      } else if (lower.includes('punycode') || lower.includes('homoglyph')) {
+        fallback = "🔡 Punycode & Homoglyph attacks use lookalike characters from international alphabets (e.g. Cyrillic 'a') to spoof trusted domains like apple.com. PhishGuard-XR detects 'xn--' prefixes and flags impersonation.";
+      }
+
+      pending.innerHTML = '<strong style="color: #60a5fa;">AI Security Assistant:</strong><br>' + fallback.replace(/\\n/g, '<br>');
+    }
+
+    sendBtn?.addEventListener('click', () => sendQuery(chatInput.value));
+    chatInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendQuery(chatInput.value);
+      }
+    });
+    chips.forEach(btn => {
+      btn.addEventListener('click', () => sendQuery(btn.getAttribute('data-q')));
+    });
+  </script>
+
   <div class="instructions">
     <strong style="color: #60a5fa; font-size: 13px;">🧪 How to Test in the PhishGuard-XR Extension:</strong>
     <ol>

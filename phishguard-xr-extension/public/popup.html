@@ -6,9 +6,9 @@
   <title>PhishGuard-XR Protection Agent</title>
   <style>
     body {
-      width: 340px;
+      width: 360px;
       margin: 0;
-      padding: 16px;
+      padding: 14px;
       background-color: #020617;
       color: #f8fafc;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,12 +18,12 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #1e293b;
-      padding-bottom: 12px;
-      margin-bottom: 14px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
     }
     .logo {
       font-weight: 800;
-      font-size: 14px;
+      font-size: 13px;
       letter-spacing: 0.5px;
     }
     .logo span { color: #3b82f6; }
@@ -39,8 +39,8 @@
     }
     .tabs {
       display: flex;
-      gap: 4px;
-      margin-bottom: 14px;
+      gap: 3px;
+      margin-bottom: 12px;
       background: #0f172a;
       padding: 3px;
       border-radius: 8px;
@@ -48,8 +48,8 @@
     }
     .tab-btn {
       flex: 1;
-      padding: 6px;
-      font-size: 11px;
+      padding: 6px 2px;
+      font-size: 10.5px;
       font-weight: 700;
       border: none;
       background: transparent;
@@ -57,6 +57,7 @@
       border-radius: 6px;
       cursor: pointer;
       text-align: center;
+      white-space: nowrap;
     }
     .tab-btn.active {
       background: #2563eb;
@@ -90,7 +91,7 @@
       box-sizing: border-box;
       margin-bottom: 8px;
     }
-    textarea { height: 70px; resize: none; }
+    textarea { height: 60px; resize: none; }
     .file-input-wrapper {
       margin-bottom: 8px;
     }
@@ -100,13 +101,13 @@
     }
     .btn {
       width: 100%;
-      padding: 10px;
+      padding: 9px;
       background: #2563eb;
       color: white;
       border: none;
       border-radius: 8px;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
       box-sizing: border-box;
     }
@@ -120,6 +121,95 @@
       font-size: 11px;
       display: none;
     }
+
+    /* AI Chat Styles */
+    .quick-chips {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .quick-chips::-webkit-scrollbar { display: none; }
+    .chip-btn {
+      white-space: nowrap;
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      font-size: 9.5px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip-btn:hover {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    .chat-container {
+      height: 190px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 2px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .chat-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    .chat-container::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    .chat-bubble {
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.45;
+      max-width: 90%;
+      word-break: break-word;
+    }
+    .chat-bubble.ai {
+      background: rgba(30, 41, 59, 0.9);
+      color: #e2e8f0;
+      align-self: flex-start;
+      border-left: 3px solid #3b82f6;
+    }
+    .chat-bubble.ai strong {
+      color: #60a5fa;
+      font-size: 10px;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .chat-bubble.user {
+      background: #2563eb;
+      color: #ffffff;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-input-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .chat-send-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      width: 36px;
+      height: 33px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .chat-send-btn:hover { background: #1d4ed8; }
   </style>
 </head>
 <body>
@@ -129,9 +219,10 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="tab-web">🌐 Webpage</button>
-    <button class="tab-btn" data-tab="tab-qr">📷 QR Code</button>
-    <button class="tab-btn" data-tab="tab-sms">💬 SMS / Email</button>
+    <button class="tab-btn active" data-tab="tab-web">🌐 Web</button>
+    <button class="tab-btn" data-tab="tab-qr">📷 QR</button>
+    <button class="tab-btn" data-tab="tab-sms">💬 SMS</button>
+    <button class="tab-btn" data-tab="tab-chat">🤖 AI Chat</button>
   </div>
 
   <!-- TAB 1: WEBPAGE SCANNER -->
@@ -174,6 +265,39 @@
       <textarea id="smsTextInput" placeholder="Paste SMS (e.g. 'URGENT: Your bank account is suspended. Verify at http://bank-verify.xyz')"></textarea>
       <button class="btn" id="scanSmsBtn">Analyze SMS / Email</button>
       <div id="smsResultBox" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: AI SECURITY CHATBOT -->
+  <div class="tab-content" id="tab-chat">
+    <div class="card" style="padding: 10px;">
+      <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🛡️ Security AI Assistant</span>
+        <span style="font-size: 9px; color: #10b981; background: rgba(16,185,129,0.15); padding: 2px 6px; border-radius: 4px;">Online</span>
+      </div>
+
+      <!-- Quick Question Pills -->
+      <div class="quick-chips">
+        <button class="chip-btn" data-q="Is this website safe?">🔍 Is site safe?</button>
+        <button class="chip-btn" data-q="What is Quishing?">📷 What is Quishing?</button>
+        <button class="chip-btn" data-q="I entered my password on a fake site!">🚨 I entered password!</button>
+        <button class="chip-btn" data-q="What is Form Origin Mismatch?">⚠️ Origin Mismatch</button>
+        <button class="chip-btn" data-q="How does Zero-PII privacy work?">🔒 Zero-PII Privacy</button>
+      </div>
+
+      <!-- Chat Messages Container -->
+      <div id="chatMessages" class="chat-container">
+        <div class="chat-bubble ai">
+          <strong>AI Assistant:</strong>
+          👋 Hello! I am your PhishGuard-XR cybersecurity analyst. Ask me anything about phishing, suspicious links, QR codes, or password protection!
+        </div>
+      </div>
+
+      <!-- Chat Input Row -->
+      <div class="chat-input-row">
+        <input type="text" id="chatQueryInput" placeholder="Ask a security question..." style="margin-bottom: 0;">
+        <button id="sendChatBtn" class="chat-send-btn">➤</button>
+      </div>
     </div>
   </div>
 
