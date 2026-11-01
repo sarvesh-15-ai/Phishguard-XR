@@ -142,8 +142,8 @@ function showRichSecurityCard(data) {
     </button>
   ` : '';
 
-  // AI Security Chatbot Panel HTML
-  const chatbotPanelHtml = `
+  // AI Security Chatbot Panel HTML (ONLY rendered when threat or suspicious indicators exist)
+  const chatbotPanelHtml = (isHigh || isSuspicious) ? `
     <div style="margin-top: 12px; border-top: 1px solid #334155; padding-top: 10px;">
       <button id="pg-toggle-chatbot-btn" style="width: 100%; background: #1e293b; border: 1.5px solid #3b82f6; color: #60a5fa; padding: 10px; font-size: 13px; font-weight: 800; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
         🤖 Ask AI Security Assistant
@@ -170,7 +170,7 @@ function showRichSecurityCard(data) {
         </div>
       </div>
     </div>
-  `;
+  ` : '';
 
   toast.innerHTML = `
     <div style="background: #0f172a; border: 2px solid ${statusColor}; border-radius: 14px; padding: 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.8); color: #f8fafc; width: 360px; max-width: 90vw;">
