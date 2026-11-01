@@ -114,9 +114,16 @@ function showRichSecurityCard(data) {
   let evidenceHtml = '';
   if (allEvidence.length > 0 && (isHigh || isSuspicious)) {
     evidenceHtml = `
-      <div style="background: rgba(2, 6, 23, 0.7); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 12px; color: #cbd5e1;">
-        <div style="font-weight: 700; color: #f8fafc; margin-bottom: 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px;">Why this site was flagged as risk:</div>
-        ${allEvidence.map(item => `<div style="margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><span style="color: ${statusColor};">⚠️</span> ${item}</div>`).join('')}
+      <div style="background: rgba(2, 6, 23, 0.75); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 10px; font-size: 11.5px; color: #cbd5e1;">
+        <div style="font-weight: 800; color: #f87171; margin-bottom: 8px; text-transform: uppercase; font-size: 9.5px; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
+          <span>⚠️</span> Threat Telemetry Detected
+        </div>
+        ${allEvidence.map(item => `
+          <div style="margin-bottom: 5px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;">
+            <span style="color: ${statusColor}; font-size: 13px; line-height: 1;">•</span>
+            <span>${item}</span>
+          </div>
+        `).join('')}
       </div>
     `;
   }
@@ -124,47 +131,49 @@ function showRichSecurityCard(data) {
   let nextStepsHtml = '';
   if (isHigh) {
     nextStepsHtml = `
-      <div style="margin-top: 10px; background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; padding: 8px 10px; font-size: 12px; color: #fca5a5;">
-        <strong>💡 Next Steps:</strong> Do NOT enter passwords, OTPs, or credit cards. Close this tab immediately or return to a verified domain.
+      <div style="margin-bottom: 10px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-left: 3.5px solid #ef4444; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: #fca5a5; line-height: 1.45;">
+        <strong style="color: #ffffff; display: block; margin-bottom: 2px;">🚨 Critical Directive:</strong>
+        Do NOT type passwords, emails, or 2FA codes. Close this browser tab immediately.
       </div>
     `;
   } else if (isSuspicious) {
     nextStepsHtml = `
-      <div style="margin-top: 10px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 8px 10px; font-size: 12px; color: #fde68a;">
-        <strong>💡 Next Steps:</strong> Verify the address bar domain carefully before typing login credentials.
+      <div style="margin-bottom: 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-left: 3.5px solid #f59e0b; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: #fde68a; line-height: 1.45;">
+        <strong style="color: #ffffff; display: block; margin-bottom: 2px;">⚠️ Caution Directive:</strong>
+        Verify the domain in the address bar before submitting any sensitive details.
       </div>
     `;
   }
 
   const reportBtnHtml = (isHigh || isSuspicious) ? `
-    <button id="pg-report-website-btn" style="margin-top: 10px; width: 100%; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; padding: 8px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-      🚩 Report Phishing Website
+    <button id="pg-report-website-btn" style="margin-bottom: 10px; width: 100%; background: linear-gradient(180deg, rgba(239, 68, 68, 0.25) 0%, rgba(185, 28, 28, 0.2) 100%); border: 1px solid rgba(239, 68, 68, 0.6); color: #fca5a5; padding: 9px 12px; font-size: 11.5px; font-weight: 800; border-radius: 8px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;">
+      🚩 Report Phishing Threat
     </button>
   ` : '';
 
   // AI Security Chatbot Panel HTML (ONLY rendered when threat or suspicious indicators exist)
   const chatbotPanelHtml = (isHigh || isSuspicious) ? `
-    <div style="margin-top: 12px; border-top: 1px solid #334155; padding-top: 10px;">
-      <button id="pg-toggle-chatbot-btn" style="width: 100%; background: #1e293b; border: 1.5px solid #3b82f6; color: #60a5fa; padding: 10px; font-size: 13px; font-weight: 800; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+      <button id="pg-toggle-chatbot-btn" style="width: 100%; background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #3b82f6; color: #60a5fa; padding: 9px; font-size: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);">
         🤖 Ask AI Security Assistant
       </button>
 
-      <div id="pg-chatbot-box" style="display: none; margin-top: 10px; background: #020617; border: 1.5px solid #3b82f6; border-radius: 10px; padding: 12px; font-size: 12px;">
-        <div id="pg-chat-history" style="max-height: 160px; overflow-y: auto; margin-bottom: 10px; color: #94a3b8; font-size: 12px; padding-right: 4px;">
-          <div style="color: #60a5fa; margin-bottom: 6px;"><strong>AI Assistant:</strong> Hello! Ask me anything about this security threat or what to do next.</div>
+      <div id="pg-chatbot-box" style="display: none; margin-top: 10px; background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 12px; font-size: 12px;">
+        <div id="pg-chat-history" style="max-height: 160px; overflow-y: auto; margin-bottom: 10px; color: #94a3b8; font-size: 11.5px; padding-right: 4px;">
+          <div style="color: #60a5fa; margin-bottom: 6px; line-height: 1.4;"><strong>AI Assistant:</strong> Hello! Ask me anything about this security threat or what to do next.</div>
         </div>
 
         <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap;">
-          <button class="pg-quick-q" data-q="Why is this site dangerous?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Why is this dangerous?</button>
-          <button class="pg-quick-q" data-q="Is this really PayPal?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Is this really PayPal?</button>
-          <button class="pg-quick-q" data-q="Where does my password go?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Where does password go?</button>
-          <button class="pg-quick-q" data-q="What is Form Origin Mismatch?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What is Origin Mismatch?</button>
-          <button class="pg-quick-q" data-q="What should I do next?" style="background: #1e293b; border: 1px solid #475569; color: #cbd5e1; font-size: 10.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What should I do next?</button>
+          <button class="pg-quick-q" data-q="Why is this site dangerous?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Why is this dangerous?</button>
+          <button class="pg-quick-q" data-q="Is this really PayPal?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Is this really PayPal?</button>
+          <button class="pg-quick-q" data-q="Where does my password go?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Where does password go?</button>
+          <button class="pg-quick-q" data-q="What is Form Origin Mismatch?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What is Origin Mismatch?</button>
+          <button class="pg-quick-q" data-q="What should I do next?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What should I do next?</button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <textarea id="pg-chat-input" placeholder="Type your question for the AI Security Assistant..." style="width: 100%; background: #0f172a; border: 2px solid #3b82f6; color: #ffffff; padding: 10px 12px; border-radius: 8px; font-size: 13px; min-height: 52px; resize: vertical; box-sizing: border-box; outline: none; font-family: inherit; line-height: 1.4;"></textarea>
-          <button id="pg-chat-send" style="width: 100%; background: #2563eb; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <textarea id="pg-chat-input" placeholder="Type your question for the AI Security Assistant..." style="width: 100%; background: #0f172a; border: 1.5px solid #3b82f6; color: #ffffff; padding: 9px 11px; border-radius: 8px; font-size: 12px; min-height: 50px; resize: vertical; box-sizing: border-box; outline: none; font-family: inherit; line-height: 1.4;"></textarea>
+          <button id="pg-chat-send" style="width: 100%; background: #2563eb; color: white; border: none; padding: 9px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
             🚀 Send Question
           </button>
         </div>
@@ -173,17 +182,24 @@ function showRichSecurityCard(data) {
   ` : '';
 
   toast.innerHTML = `
-    <div style="background: #0f172a; border: 2px solid ${statusColor}; border-radius: 14px; padding: 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.8); color: #f8fafc; width: 360px; max-width: 90vw;">
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 12px; height: 12px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 12px ${statusColor}; flex-shrink: 0;"></div>
-          <div style="font-size: 11px; font-weight: 800; color: ${statusColor}; letter-spacing: 0.5px;">${title}</div>
+    <div style="background: rgba(10, 15, 30, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid ${statusColor}; border-radius: 16px; padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 30px ${statusColor}33; color: #f8fafc; width: 370px; max-width: 92vw; font-family: system-ui, -apple-system, sans-serif;">
+      
+      <!-- Top Cyber Status Bar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 10px ${statusColor};"></span>
+          <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${statusColor};">${title}</span>
         </div>
-        <button id="pg-toast-close" style="background: transparent; border: none; color: #64748b; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1;">✕</button>
+        <button id="pg-toast-close" style="background: rgba(30,41,59,0.6); border: 1px solid #334155; border-radius: 6px; color: #94a3b8; font-size: 13px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; line-height: 1;">✕</button>
       </div>
 
-      <div style="font-size: 13px; color: #94a3b8; margin-bottom: 4px;">
-        Risk Score: <strong style="color: #f8fafc; font-size: 15px; font-family: monospace;">${riskScore}/100</strong>
+      <!-- Risk Score HUD with Progress Needle -->
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+        <span style="font-size: 10.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Calibrated Risk Index</span>
+        <span style="font-size: 17px; font-weight: 800; font-family: monospace; color: ${statusColor};">${riskScore}<span style="font-size: 10.5px; color: #64748b;">/100</span></span>
+      </div>
+      <div style="background: rgba(30, 41, 59, 0.8); border-radius: 9999px; height: 6px; width: 100%; overflow: hidden; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06);">
+        <div style="background: ${statusColor}; height: 100%; width: ${Math.min(100, Math.max(8, riskScore))}%; box-shadow: 0 0 10px ${statusColor}; border-radius: 9999px; transition: width 0.8s ease;"></div>
       </div>
 
       ${evidenceHtml}

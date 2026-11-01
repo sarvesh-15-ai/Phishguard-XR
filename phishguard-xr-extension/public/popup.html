@@ -112,14 +112,145 @@
     }
     .btn:hover { background: #1d4ed8; }
     .result-box {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      background: #020617;
-      border: 1px solid #334155;
-      font-size: 11px;
+      margin-top: 12px;
       display: none;
     }
+
+    /* Cyber-Glassmorphic HUD Results UI */
+    .result-card-v2 {
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 14px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .result-card-v2.threat {
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 12px 30px -5px rgba(239, 68, 68, 0.25), 0 0 15px -2px rgba(239, 68, 68, 0.2);
+    }
+    .result-card-v2.safe {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 12px 30px -5px rgba(16, 185, 129, 0.25), 0 0 15px -2px rgba(16, 185, 129, 0.2);
+    }
+    .result-card-v2.caution {
+      border-color: rgba(245, 158, 11, 0.5);
+      box-shadow: 0 12px 30px -5px rgba(245, 158, 11, 0.25);
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: translateY(6px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .gauge-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+    .gauge-svg-wrap {
+      position: relative;
+      width: 66px;
+      height: 66px;
+      flex-shrink: 0;
+    }
+    .gauge-score-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: 800;
+      font-family: monospace;
+      font-size: 16px;
+      text-align: center;
+      line-height: 1;
+    }
+    .gauge-score-sub {
+      font-size: 8px;
+      opacity: 0.7;
+      display: block;
+      margin-top: 2px;
+    }
+    .verdict-info { flex: 1; }
+    .verdict-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+    .verdict-badge.threat {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    .verdict-badge.safe {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .verdict-badge.caution {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .target-url-box {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-family: monospace;
+      font-size: 10px;
+      color: #93c5fd;
+      word-break: break-all;
+      margin-bottom: 8px;
+    }
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .telemetry-pill {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+    .telemetry-pill-lbl {
+      font-size: 8.5px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .telemetry-pill-val {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .evidence-list-box {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 7px 9px;
+      font-size: 10px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+    .evidence-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      margin-bottom: 3px;
+    }
+    .evidence-item:last-child { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -151,6 +282,7 @@
       </div>
     </div>
     <button class="btn" id="reScanBtn">Scan Current Page</button>
+    <div id="webResultBox" class="result-box"></div>
   </div>
 
   <!-- TAB 2: QR CODE SCANNER -->

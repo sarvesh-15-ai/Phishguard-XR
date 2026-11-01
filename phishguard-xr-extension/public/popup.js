@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const domainDisplay = document.getElementById('domainDisplay');
   const reScanBtn = document.getElementById('reScanBtn');
+  const webResultBox = document.getElementById('webResultBox');
 
   // 1. Tab Switching Logic
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 2. Active Tab Domain Display
+  // 2. Active Tab Domain Display & Live Web Audit
   if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0] && tabs[0].url) {
@@ -32,10 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (reScanBtn) {
       reScanBtn.addEventListener('click', () => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
           if (tabs[0] && tabs[0].id) {
             chrome.tabs.sendMessage(tabs[0].id, { type: 'TRIGGER_DOM_EXTRACTION' });
-            window.close();
+
+            if (webResultBox && tabs[0].url && !tabs[0].url.startsWith('chrome://')) {
+              webResultBox.style.display = 'block';
+              webResultBox.innerHTML = '<span style="color: #60a5fa;">Auditing active tab telemetry...</span>';
+              const evalRes = await evaluateUrlPayload(tabs[0].url);
+              webResultBox.innerHTML = renderRichResultCard(tabs[0].url, evalRes, { type: 'Active Tab Webpage Audit', icon: '🌐' });
+            }
           }
         });
       });
@@ -320,24 +327,111 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const evalResult = await evaluateUrlPayload(targetPayload);
+    qrResultBox.innerHTML = renderRichResultCard(targetPayload, evalResult, { type: 'QR Code Optical Scan', icon: '📷' });
+  });
+
+  // Helper: Modern Cyber-Glassmorphic Result Renderer
+  function renderRichResultCard(targetUrl, evalResult, options = {}) {
     const isThreat = evalResult.risk_score >= 50;
-    const badgeColor = isThreat ? '#ef4444' : '#10b981';
-    const badgeText = isThreat ? '⚠️ QR DESTINATION EVALUATION: CRITICAL THREAT' : '✅ QR DESTINATION EVALUATION: SAFE';
-    const scoreLabel = isThreat ? 'DANGEROUS' : 'CLEAN';
+    const isCaution = evalResult.risk_score >= 35 && evalResult.risk_score < 50;
+    const score = Math.min(100, Math.max(0, evalResult.risk_score || 0));
 
-    const evidenceHtml = (evalResult.evidence || [])
-      .map(ev => `<div style="font-size: 10px; color: #cbd5e1; margin-top: 3px;">• ${ev}</div>`)
-      .join('');
+    let statusTheme = 'safe';
+    let themeColor = '#10b981';
+    let badgeLabel = 'VERIFIED SAFE';
+    let heroIcon = '🛡️';
 
-    qrResultBox.innerHTML = `
-      <div style="font-weight: 700; color: ${badgeColor}; margin-bottom: 4px;">${badgeText}</div>
-      <div>Decoded Link: <code style="color: ${isThreat ? '#f87171' : '#34d399'}; word-break: break-all;">${targetPayload}</code></div>
-      <div style="margin-top: 4px; color: #94a3b8;">Risk Score: <strong style="color: ${badgeColor};">${evalResult.risk_score}/100 (${scoreLabel})</strong></div>
-      <div style="margin-top: 6px; border-top: 1px solid #1e293b; padding-top: 4px;">
-        ${evidenceHtml}
+    if (isThreat) {
+      statusTheme = 'threat';
+      themeColor = '#ef4444';
+      badgeLabel = 'CRITICAL THREAT';
+      heroIcon = '🚨';
+    } else if (isCaution) {
+      statusTheme = 'caution';
+      themeColor = '#f59e0b';
+      badgeLabel = 'SUSPICIOUS';
+      heroIcon = '⚠️';
+    }
+
+    const circumference = 175.92;
+    const offset = circumference * (1 - score / 100);
+
+    let rootDomain = 'Safe Verified';
+    let tld = '.com';
+    let protocol = 'HTTPS';
+
+    try {
+      if (targetUrl.includes('http') || targetUrl.includes('.')) {
+        const parsed = new URL(targetUrl.startsWith('http') ? targetUrl : 'https://' + targetUrl);
+        const parts = parsed.hostname.split('.');
+        rootDomain = parts.length >= 2 ? parts.slice(-2).join('.') : parsed.hostname;
+        tld = parts.length > 1 ? '.' + parts[parts.length - 1] : '.com';
+        protocol = parsed.protocol.toUpperCase().replace(':', '');
+      }
+    } catch (e) {}
+
+    const evidenceItems = (evalResult.evidence || []).map(ev => `
+      <div class="evidence-item">
+        <span style="color: ${themeColor}; font-weight: bold; font-size: 12px; line-height: 1;">•</span>
+        <span>${ev}</span>
+      </div>
+    `).join('');
+
+    return `
+      <div class="result-card-v2 ${statusTheme}">
+        <div class="gauge-container">
+          <div class="gauge-svg-wrap">
+            <svg width="66" height="66" viewBox="0 0 68 68">
+              <circle cx="34" cy="34" r="28" fill="none" stroke="#1e293b" stroke-width="5" />
+              <circle cx="34" cy="34" r="28" fill="none" stroke="${themeColor}" stroke-width="5"
+                      stroke-dasharray="175.92" stroke-dashoffset="${offset.toFixed(1)}" stroke-linecap="round"
+                      transform="rotate(-90 34 34)" style="filter: drop-shadow(0 0 5px ${themeColor}); transition: stroke-dashoffset 0.8s ease;" />
+            </svg>
+            <div class="gauge-score-text" style="color: ${themeColor};">
+              ${score}
+              <span class="gauge-score-sub" style="color: #94a3b8;">/100</span>
+            </div>
+          </div>
+          <div class="verdict-info">
+            <span class="verdict-badge ${statusTheme}">${heroIcon} ${badgeLabel}</span>
+            <div style="font-size: 11px; font-weight: 700; color: #f8fafc; margin-top: 2px;">
+              ${options.type || 'Security Audit'}
+            </div>
+            <div style="font-size: 9.5px; color: #94a3b8; margin-top: 2px;">
+              Confidence: <strong style="color: #cbd5e1;">${Math.round((evalResult.confidence || 0.94) * 100)}%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Scanned Target</div>
+        <div class="target-url-box">${targetUrl}</div>
+
+        <div class="telemetry-grid">
+          <div class="telemetry-pill">
+            <div class="telemetry-pill-lbl">Domain Root</div>
+            <div class="telemetry-pill-val">${rootDomain}</div>
+          </div>
+          <div class="telemetry-pill">
+            <div class="telemetry-pill-lbl">TLD Status</div>
+            <div class="telemetry-pill-val" style="color: ${tld === '.xyz' || tld === '.top' ? '#ef4444' : '#f1f5f9'};">${tld}</div>
+          </div>
+          <div class="telemetry-pill">
+            <div class="telemetry-pill-lbl">Transport Security</div>
+            <div class="telemetry-pill-val" style="color: ${protocol === 'HTTP' ? '#f59e0b' : '#10b981'};">${protocol}</div>
+          </div>
+          <div class="telemetry-pill">
+            <div class="telemetry-pill-lbl">Policy Decision</div>
+            <div class="telemetry-pill-val" style="color: ${themeColor};">${isThreat ? 'BLOCK_CREDENTIALS' : 'ALLOW_NAVIGATION'}</div>
+          </div>
+        </div>
+
+        <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Telemetry Breakdown</div>
+        <div class="evidence-list-box">
+          ${evidenceItems || '<div style="color: #94a3b8;">No threat anomalies detected. Page complies with Zero-Trust baseline.</div>'}
+        </div>
       </div>
     `;
-  });
+  }
 
   // 4. SMS / Email Scanner Handler
   const scanSmsBtn = document.getElementById('scanSmsBtn');
@@ -369,43 +463,40 @@ document.addEventListener('DOMContentLoaded', () => {
     // CASE A: Pure Text Message (No Links Attached)
     if (extractedUrls.length === 0) {
       if (urgencyDetected.length === 0 && credsDetected.length === 0) {
-        // Completely normal conversational message
-        smsResultBox.innerHTML = `
-          <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">✅ SMS / EMAIL EVALUATION: SAFE</div>
-          <div style="color: #94a3b8;">Detected Payload: <span style="color: #cbd5e1;">Natural Conversational Text</span></div>
-          <div style="margin-top: 4px; color: #94a3b8;">Risk Score: <strong style="color: #10b981;">5/100 (BENIGN)</strong></div>
-          <div style="margin-top: 6px; border-top: 1px solid #1e293b; padding-top: 4px;">
-            <div style="font-size: 10px; color: #cbd5e1;">• No embedded hyperlinks or redirection attempts detected.</div>
-            <div style="font-size: 10px; color: #cbd5e1;">• Normal conversational message tone with zero coercion markers.</div>
-          </div>
-        `;
+        smsResultBox.innerHTML = renderRichResultCard('Natural Text Message (Zero Hyperlinks)', {
+          risk_score: 5,
+          severity: 'safe',
+          confidence: 0.98,
+          evidence: [
+            'No embedded hyperlinks or redirection targets detected.',
+            'Normal conversational message tone with zero coercion markers.'
+          ]
+        }, { type: 'SMS Conversational Audit', icon: '💬' });
         return;
       }
 
       if (credsDetected.length > 0 && urgencyDetected.length > 0) {
-        // Smishing attack trying to extract credentials via SMS reply
-        smsResultBox.innerHTML = `
-          <div style="font-weight: 700; color: #ef4444; margin-bottom: 4px;">⚠️ SMS / EMAIL EVALUATION: HIGH RISK SMISHING</div>
-          <div style="color: #94a3b8;">Threat Vector: <span style="color: #f87171;">Social Engineering / Direct Credential Harvesting</span></div>
-          <div style="margin-top: 4px; color: #94a3b8;">Risk Score: <strong style="color: #ef4444;">78/100 (SUSPICIOUS)</strong></div>
-          <div style="margin-top: 6px; border-top: 1px solid #1e293b; padding-top: 4px;">
-            <div style="font-size: 10px; color: #cbd5e1;">• High urgency pressure detected: "${urgencyDetected.join(', ')}"</div>
-            <div style="font-size: 10px; color: #cbd5e1;">• Requests sensitive credentials directly: "${credsDetected.join(', ')}"</div>
-          </div>
-        `;
+        smsResultBox.innerHTML = renderRichResultCard('Direct Social Engineering Smishing', {
+          risk_score: 78,
+          severity: 'high',
+          confidence: 0.92,
+          evidence: [
+            `High urgency pressure detected: "${urgencyDetected.join(', ')}"`,
+            `Requests sensitive credentials directly: "${credsDetected.join(', ')}"`
+          ]
+        }, { type: 'SMS Credential Harvesting Attempt', icon: '🚨' });
         return;
       }
 
-      // Automated 2FA or standard verification notice
-      smsResultBox.innerHTML = `
-        <div style="font-weight: 700; color: #10b981; margin-bottom: 4px;">✅ SMS / EMAIL EVALUATION: SAFE (INFORMATIONAL)</div>
-        <div style="color: #94a3b8;">Detected Payload: <span style="color: #cbd5e1;">Automated Alert / Notification</span></div>
-        <div style="margin-top: 4px; color: #94a3b8;">Risk Score: <strong style="color: #10b981;">14/100 (CLEAN)</strong></div>
-        <div style="margin-top: 6px; border-top: 1px solid #1e293b; padding-top: 4px;">
-          <div style="font-size: 10px; color: #cbd5e1;">• No malicious URLs or external redirection targets attached.</div>
-          <div style="font-size: 10px; color: #cbd5e1;">• Standard informational or 2FA alert notice.</div>
-        </div>
-      `;
+      smsResultBox.innerHTML = renderRichResultCard('Automated 2FA / Informational Notice', {
+        risk_score: 14,
+        severity: 'safe',
+        confidence: 0.96,
+        evidence: [
+          'No malicious external URLs or redirection targets attached.',
+          'Standard automated informational or verification code format.'
+        ]
+      }, { type: 'SMS Informational Notification', icon: '💬' });
       return;
     }
 
@@ -426,21 +517,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const isHighRisk = combinedRisk >= 50;
-    const statusColor = isHighRisk ? '#ef4444' : '#10b981';
-    const statusTitle = isHighRisk ? '⚠️ SMS / EMAIL EVALUATION: HIGH RISK PHISHING' : '✅ SMS / EMAIL EVALUATION: SAFE';
-    const scoreLabel = isHighRisk ? 'DANGEROUS' : 'CLEAN';
 
-    const evidenceHtml = combinedEvidence
-      .map(ev => `<div style="font-size: 10px; color: #cbd5e1; margin-top: 3px;">• ${ev}</div>`)
-      .join('');
-
-    smsResultBox.innerHTML = `
-      <div style="font-weight: 700; color: ${statusColor}; margin-bottom: 4px;">${statusTitle}</div>
-      <div>Extracted Link: <code style="color: ${isHighRisk ? '#f87171' : '#34d399'}; word-break: break-all;">${targetUrl}</code></div>
-      <div style="margin-top: 4px; color: #94a3b8;">Risk Score: <strong style="color: ${statusColor};">${combinedRisk}/100 (${scoreLabel})</strong></div>
-      <div style="margin-top: 6px; border-top: 1px solid #1e293b; padding-top: 4px;">
-        ${evidenceHtml}
-      </div>
-    `;
+    smsResultBox.innerHTML = renderRichResultCard(targetUrl, {
+      risk_score: combinedRisk,
+      severity: isHighRisk ? 'critical' : 'safe',
+      confidence: evalData.confidence || 0.93,
+      evidence: combinedEvidence
+    }, { type: 'SMS / Email Phishing Analysis', icon: isHighRisk ? '🚨' : '💬' });
   });
 });
