@@ -111,22 +111,30 @@ function showRichSecurityCard(data) {
   const domEvidence = (data.evidence && data.evidence.dom_evidence) || [];
   const allEvidence = Array.isArray(data.evidence) ? data.evidence : [...urlEvidence, ...domEvidence];
 
-  let evidenceHtml = '';
-  if (allEvidence.length > 0 && (isHigh || isSuspicious)) {
-    evidenceHtml = `
-      <div style="background: rgba(2, 6, 23, 0.75); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 10px; font-size: 11.5px; color: #cbd5e1;">
-        <div style="font-weight: 800; color: #f87171; margin-bottom: 8px; text-transform: uppercase; font-size: 9.5px; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
-          <span>⚠️</span> Threat Telemetry Detected
-        </div>
-        ${allEvidence.map(item => `
-          <div style="margin-bottom: 5px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;">
-            <span style="color: ${statusColor}; font-size: 13px; line-height: 1;">•</span>
-            <span>${item}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
+  const circumference = 175.92;
+  const offset = circumference * (1 - riskScore / 100);
+
+  let rootDomain = window.location.hostname;
+  let tld = '.com';
+  let protocol = window.location.protocol.toUpperCase().replace(':', '');
+
+  try {
+    const parts = window.location.hostname.split('.');
+    rootDomain = parts.length >= 2 ? parts.slice(-2).join('.') : window.location.hostname;
+    tld = parts.length > 1 ? '.' + parts[parts.length - 1] : '.com';
+  } catch (e) {}
+
+  const badgeText = isHigh ? '🚨 CRITICAL THREAT' : (isSuspicious ? '⚠️ SUSPICIOUS' : '🛡️ VERIFIED SAFE');
+  const badgeBg = isHigh ? 'rgba(239, 68, 68, 0.2)' : (isSuspicious ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)');
+  const badgeBorder = isHigh ? 'rgba(239, 68, 68, 0.4)' : (isSuspicious ? 'rgba(245, 158, 11, 0.4)' : 'rgba(16, 185, 129, 0.4)');
+  const badgeColor = isHigh ? '#f87171' : (isSuspicious ? '#fbbf24' : '#34d399');
+
+  const evidenceItemsHtml = (allEvidence.length > 0 ? allEvidence : ['Zero threat anomalies detected. Page complies with Zero-Trust baseline.']).map(item => `
+    <div style="display: flex; align-items: flex-start; gap: 6px; margin-bottom: 3px; font-size: 10px; line-height: 1.45;">
+      <span style="color: ${statusColor}; font-weight: bold; font-size: 12px; line-height: 1;">•</span>
+      <span style="color: #cbd5e1;">${item}</span>
+    </div>
+  `).join('');
 
   let nextStepsHtml = '';
   if (isHigh) {
@@ -182,27 +190,72 @@ function showRichSecurityCard(data) {
   ` : '';
 
   toast.innerHTML = `
-    <div style="background: rgba(10, 15, 30, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid ${statusColor}; border-radius: 16px; padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 30px ${statusColor}33; color: #f8fafc; width: 370px; max-width: 92vw; font-family: system-ui, -apple-system, sans-serif;">
+    <div style="background: rgba(10, 15, 30, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid ${statusColor}88; border-radius: 14px; padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 25px ${statusColor}33; color: #f8fafc; width: 360px; max-width: 92vw; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box;">
       
       <!-- Top Cyber Status Bar -->
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08);">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 10px ${statusColor};"></span>
-          <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${statusColor};">${title}</span>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 8px ${statusColor};"></span>
+          <span style="font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${statusColor};">${title}</span>
         </div>
-        <button id="pg-toast-close" style="background: rgba(30,41,59,0.6); border: 1px solid #334155; border-radius: 6px; color: #94a3b8; font-size: 13px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; line-height: 1;">✕</button>
+        <button id="pg-toast-close" style="background: rgba(30,41,59,0.6); border: 1px solid #334155; border-radius: 6px; color: #94a3b8; font-size: 12px; cursor: pointer; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; line-height: 1;">✕</button>
       </div>
 
-      <!-- Risk Score HUD with Progress Needle -->
-      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
-        <span style="font-size: 10.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Calibrated Risk Index</span>
-        <span style="font-size: 17px; font-weight: 800; font-family: monospace; color: ${statusColor};">${riskScore}<span style="font-size: 10.5px; color: #64748b;">/100</span></span>
-      </div>
-      <div style="background: rgba(30, 41, 59, 0.8); border-radius: 9999px; height: 6px; width: 100%; overflow: hidden; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06);">
-        <div style="background: ${statusColor}; height: 100%; width: ${Math.min(100, Math.max(8, riskScore))}%; box-shadow: 0 0 10px ${statusColor}; border-radius: 9999px; transition: width 0.8s ease;"></div>
+      <!-- HUD Gauge Header (Exact match to popup HUD) -->
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(148, 163, 184, 0.12);">
+        <div style="position: relative; width: 66px; height: 66px; flex-shrink: 0;">
+          <svg width="66" height="66" viewBox="0 0 68 68">
+            <circle cx="34" cy="34" r="28" fill="none" stroke="#1e293b" stroke-width="5" />
+            <circle cx="34" cy="34" r="28" fill="none" stroke="${statusColor}" stroke-width="5"
+                    stroke-dasharray="175.92" stroke-dashoffset="${offset.toFixed(1)}" stroke-linecap="round"
+                    transform="rotate(-90 34 34)" style="filter: drop-shadow(0 0 5px ${statusColor}); transition: stroke-dashoffset 0.8s ease;" />
+          </svg>
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-family: monospace; font-size: 16px; text-align: center; line-height: 1; color: ${statusColor};">
+            ${riskScore}
+            <span style="font-size: 8px; opacity: 0.7; display: block; margin-top: 2px; color: #94a3b8;">/100</span>
+          </div>
+        </div>
+        <div style="flex: 1;">
+          <span style="display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; margin-bottom: 4px;">${badgeText}</span>
+          <div style="font-size: 12px; font-weight: 700; color: #f8fafc; margin-top: 2px;">
+            Active Tab Webpage Audit
+          </div>
+          <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+            Confidence: <strong style="color: #cbd5e1;">${Math.round((data.confidence || 0.95) * 100)}%</strong>
+          </div>
+        </div>
       </div>
 
-      ${evidenceHtml}
+      <!-- Scanned Target Box -->
+      <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Scanned Target</div>
+      <div style="background: #020617; border: 1px solid #1e293b; border-radius: 6px; padding: 6px 9px; font-family: monospace; font-size: 10px; color: #93c5fd; word-break: break-all; margin-bottom: 8px;">${window.location.href}</div>
+
+      <!-- Telemetry Matrix Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px;">
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
+          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Domain Root</div>
+          <div style="font-size: 10.5px; font-weight: 700; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${rootDomain}</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
+          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">TLD Status</div>
+          <div style="font-size: 10.5px; font-weight: 700; color: ${tld === '.xyz' || tld === '.top' ? '#ef4444' : '#f1f5f9'};">${tld}</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
+          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Transport Security</div>
+          <div style="font-size: 10.5px; font-weight: 700; color: ${protocol === 'HTTP' ? '#f59e0b' : '#10b981'};">${protocol}</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
+          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Policy Decision</div>
+          <div style="font-size: 10.5px; font-weight: 800; color: ${statusColor};">${isHigh ? 'BLOCK_CREDENTIALS' : 'ALLOW_NAVIGATION'}</div>
+        </div>
+      </div>
+
+      <!-- Telemetry Breakdown -->
+      <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Telemetry Breakdown</div>
+      <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid #1e293b; border-radius: 6px; padding: 7px 9px; margin-bottom: 10px;">
+        ${evidenceItemsHtml}
+      </div>
+
       ${nextStepsHtml}
       ${reportBtnHtml}
       <div id="pg-report-status" style="display: none; margin-top: 8px; font-size: 11px; color: #10b981; text-align: center; font-weight: bold;"></div>

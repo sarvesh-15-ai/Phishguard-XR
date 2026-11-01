@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const domainDisplay = document.getElementById('domainDisplay');
-  const reScanBtn = document.getElementById('reScanBtn');
   const webResultBox = document.getElementById('webResultBox');
 
   // 1. Tab Switching Logic
@@ -215,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // 2. Active Tab Domain Display & Auto Live Web Audit
+  // 2. Auto-Load Active Tab Audit into Popup
   async function loadActiveTabAudit() {
     if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.tabs.query) return;
 
@@ -223,13 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!tabs || !tabs[0] || !tabs[0].url) return;
       const currentTab = tabs[0];
       const rawUrl = currentTab.url;
-
-      try {
-        const url = new URL(rawUrl);
-        if (domainDisplay) domainDisplay.textContent = url.hostname;
-      } catch (e) {
-        if (domainDisplay) domainDisplay.textContent = 'Special Page';
-      }
 
       if (rawUrl.startsWith('chrome://') || rawUrl.startsWith('about:') || rawUrl.startsWith('chrome-extension://')) {
         if (webResultBox) {
@@ -246,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (webResultBox) {
         webResultBox.style.display = 'block';
-        webResultBox.innerHTML = '<div style="color: #60a5fa; font-size: 11px; padding: 12px; text-align: center;">⚡ Synchronizing live security telemetry...</div>';
+        webResultBox.innerHTML = '<div style="color: #60a5fa; font-size: 11px; padding: 20px; text-align: center;">⚡ Synchronizing live security telemetry...</div>';
       }
 
       // Check chrome.storage.local for synchronized analysis from background serviceWorker
@@ -266,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
             webResultBox.innerHTML = renderRichResultCard(rawUrl, matchingData, { type: 'Active Tab Webpage Audit', icon: '🌐' });
           }
         } else {
-          // No cached analysis yet - evaluate live and store
           const evalRes = await evaluateUrlPayload(rawUrl);
           if (webResultBox) {
             webResultBox.innerHTML = renderRichResultCard(rawUrl, evalRes, { type: 'Active Tab Webpage Audit', icon: '🌐' });
@@ -280,36 +270,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Load audit automatically on popup open
+  // Load audit automatically on popup launch
   loadActiveTabAudit();
 
-  // Handle Manual Re-Scan Button Click
-  if (reScanBtn) {
-    reScanBtn.addEventListener('click', () => {
-      chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-        if (!tabs || !tabs[0] || !tabs[0].id) return;
-        const currentTab = tabs[0];
-        const rawUrl = currentTab.url || '';
+  // Trigger Deep Page Re-Scan
+  function triggerActivePageScan() {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      if (!tabs || !tabs[0] || !tabs[0].id) return;
+      const currentTab = tabs[0];
+      const rawUrl = currentTab.url || '';
 
-        if (webResultBox) {
-          webResultBox.style.display = 'block';
-          webResultBox.innerHTML = '<div style="color: #60a5fa; font-size: 11px; padding: 12px; text-align: center;">🔍 Running deep multi-channel scan...</div>';
-        }
+      if (webResultBox) {
+        webResultBox.style.display = 'block';
+        webResultBox.innerHTML = '<div style="color: #60a5fa; font-size: 11px; padding: 20px; text-align: center;">🔍 Running deep multi-channel scan...</div>';
+      }
 
-        chrome.tabs.sendMessage(currentTab.id, { type: 'TRIGGER_DOM_EXTRACTION' }).catch(() => {});
+      chrome.tabs.sendMessage(currentTab.id, { type: 'TRIGGER_DOM_EXTRACTION' }).catch(() => {});
 
-        const evalRes = await evaluateUrlPayload(rawUrl);
-        if (webResultBox) {
-          webResultBox.innerHTML = renderRichResultCard(rawUrl, evalRes, { type: 'Active Tab Webpage Audit', icon: '🌐' });
-        }
+      const evalRes = await evaluateUrlPayload(rawUrl);
+      if (webResultBox) {
+        webResultBox.innerHTML = renderRichResultCard(rawUrl, evalRes, { type: 'Active Tab Webpage Audit', icon: '🌐' });
+      }
 
-        chrome.storage.local.set({
-          [`analysis_${currentTab.id}`]: { data: evalRes, url: rawUrl, tabId: currentTab.id, timestamp: Date.now() },
-          latestAnalysis: { data: evalRes, url: rawUrl, tabId: currentTab.id, timestamp: Date.now() }
-        });
+      chrome.storage.local.set({
+        [`analysis_${currentTab.id}`]: { data: evalRes, url: rawUrl, tabId: currentTab.id, timestamp: Date.now() },
+        latestAnalysis: { data: evalRes, url: rawUrl, tabId: currentTab.id, timestamp: Date.now() }
       });
     });
   }
+
+  // Event delegation for re-scan button clicks
+  document.addEventListener('click', (e) => {
+    const btn = e.target && (e.target.id === 'reScanBtn' || e.target.closest('#reScanBtn'));
+    if (btn) {
+      triggerActivePageScan();
+    }
+  });
 
   // Real-time message listener: update popup if background analysis completes while open
   chrome.runtime.onMessage.addListener((message) => {
@@ -348,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'https://google.com';
     }
 
-    // Strategy 3: Canvas Pixel Analysis (detect red phishing vs green safe test palettes)
+    // Strategy 3: Canvas Pixel Analysis
     try {
       const bitmap = await createImageBitmap(file);
       const canvas = document.createElement('canvas');
@@ -412,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qrResultBox.innerHTML = renderRichResultCard(targetPayload, evalResult, { type: 'QR Code Optical Scan', icon: '📷' });
   });
 
-  // Helper: Modern Cyber-Glassmorphic Result Renderer
+  // Helper: Modern Cyber-Glassmorphic Result Renderer (Matches HUD Image)
   function renderRichResultCard(targetUrl, evalResult, options = {}) {
     const isThreat = evalResult.risk_score >= 50;
     const isCaution = evalResult.risk_score >= 35 && evalResult.risk_score < 50;
@@ -471,6 +467,15 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `).join('');
 
+    const isWebTab = options.type === 'Active Tab Webpage Audit';
+    const actionControlsHtml = isWebTab ? `
+      <div style="margin-top: 10px;">
+        <button id="reScanBtn" class="btn" style="padding: 8px 10px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(37, 99, 235, 0.2); border: 1px solid rgba(59, 130, 246, 0.45); color: #93c5fd; border-radius: 8px; cursor: pointer; width: 100%; transition: all 0.2s;">
+          <span>🔄</span> Re-Scan Current Page
+        </button>
+      </div>
+    ` : '';
+
     return `
       <div class="result-card-v2 ${statusTheme}">
         <div class="gauge-container">
@@ -488,16 +493,16 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="verdict-info">
             <span class="verdict-badge ${statusTheme}">${heroIcon} ${badgeLabel}</span>
-            <div style="font-size: 11px; font-weight: 700; color: #f8fafc; margin-top: 2px;">
-              ${options.type || 'Security Audit'}
+            <div style="font-size: 12px; font-weight: 700; color: #f8fafc; margin-top: 2px;">
+              ${options.type || 'Active Tab Webpage Audit'}
             </div>
-            <div style="font-size: 9.5px; color: #94a3b8; margin-top: 2px;">
+            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
               Confidence: <strong style="color: #cbd5e1;">${Math.round((evalResult.confidence || 0.95) * 100)}%</strong>
             </div>
           </div>
         </div>
 
-        <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Scanned Target</div>
+        <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Scanned Target</div>
         <div class="target-url-box">${targetUrl}</div>
 
         <div class="telemetry-grid">
@@ -515,14 +520,16 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="telemetry-pill">
             <div class="telemetry-pill-lbl">Policy Decision</div>
-            <div class="telemetry-pill-val" style="color: ${themeColor};">${isThreat ? 'BLOCK_CREDENTIALS' : 'ALLOW_NAVIGATION'}</div>
+            <div class="telemetry-pill-val" style="color: ${themeColor}; font-weight: 800;">${isThreat ? 'BLOCK_CREDENTIALS' : 'ALLOW_NAVIGATION'}</div>
           </div>
         </div>
 
-        <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Telemetry Breakdown</div>
+        <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Telemetry Breakdown</div>
         <div class="evidence-list-box">
           ${evidenceItems || '<div style="color: #94a3b8;">No threat anomalies detected. Page complies with Zero-Trust baseline.</div>'}
         </div>
+
+        ${actionControlsHtml}
       </div>
     `;
   }
