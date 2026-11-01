@@ -81,16 +81,52 @@ function extractDomFeatures() {
 }
 
 function showRichSecurityCard(data) {
+  // Inject custom sleek scrollbar stylesheet once into document
+  if (!document.getElementById('pg-scrollbar-styles')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'pg-scrollbar-styles';
+    styleEl.textContent = `
+      #pg-toast-inner::-webkit-scrollbar,
+      #pg-chat-history::-webkit-scrollbar,
+      .pg-evidence-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      #pg-toast-inner::-webkit-scrollbar-track,
+      #pg-chat-history::-webkit-scrollbar-track,
+      .pg-evidence-scroll::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 999px;
+      }
+      #pg-toast-inner::-webkit-scrollbar-thumb,
+      #pg-chat-history::-webkit-scrollbar-thumb,
+      .pg-evidence-scroll::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.45);
+        border-radius: 999px;
+      }
+      #pg-toast-inner::-webkit-scrollbar-thumb:hover,
+      #pg-chat-history::-webkit-scrollbar-thumb:hover,
+      .pg-evidence-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.75);
+      }
+    `;
+    (document.head || document.documentElement).appendChild(styleEl);
+  }
+
   let toast = document.getElementById('phishguard-xr-toast-card');
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'phishguard-xr-toast-card';
     toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
+    toast.style.top = '16px';
+    toast.style.right = '16px';
     toast.style.zIndex = '2147483647';
     toast.style.fontFamily = 'system-ui, -apple-system, sans-serif';
     toast.style.transition = 'all 0.3s ease';
+    toast.style.maxHeight = 'calc(100vh - 32px)';
+    toast.style.boxSizing = 'border-box';
+    toast.style.display = 'flex';
+    toast.style.flexDirection = 'column';
+    toast.style.pointerEvents = 'auto';
     
     if (document.body) {
       document.body.appendChild(toast);
@@ -139,14 +175,14 @@ function showRichSecurityCard(data) {
   let nextStepsHtml = '';
   if (isHigh) {
     nextStepsHtml = `
-      <div style="margin-bottom: 10px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-left: 3.5px solid #ef4444; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: #fca5a5; line-height: 1.45;">
+      <div style="margin-bottom: 8px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-left: 3.5px solid #ef4444; border-radius: 8px; padding: 9px 11px; font-size: 11px; color: #fca5a5; line-height: 1.45;">
         <strong style="color: #ffffff; display: block; margin-bottom: 2px;">🚨 Critical Directive:</strong>
         Do NOT type passwords, emails, or 2FA codes. Close this browser tab immediately.
       </div>
     `;
   } else if (isSuspicious) {
     nextStepsHtml = `
-      <div style="margin-bottom: 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-left: 3.5px solid #f59e0b; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: #fde68a; line-height: 1.45;">
+      <div style="margin-bottom: 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-left: 3.5px solid #f59e0b; border-radius: 8px; padding: 9px 11px; font-size: 11px; color: #fde68a; line-height: 1.45;">
         <strong style="color: #ffffff; display: block; margin-bottom: 2px;">⚠️ Caution Directive:</strong>
         Verify the domain in the address bar before submitting any sensitive details.
       </div>
@@ -154,34 +190,34 @@ function showRichSecurityCard(data) {
   }
 
   const reportBtnHtml = (isHigh || isSuspicious) ? `
-    <button id="pg-report-website-btn" style="margin-bottom: 10px; width: 100%; background: linear-gradient(180deg, rgba(239, 68, 68, 0.25) 0%, rgba(185, 28, 28, 0.2) 100%); border: 1px solid rgba(239, 68, 68, 0.6); color: #fca5a5; padding: 9px 12px; font-size: 11.5px; font-weight: 800; border-radius: 8px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;">
+    <button id="pg-report-website-btn" style="margin-bottom: 8px; width: 100%; background: linear-gradient(180deg, rgba(239, 68, 68, 0.25) 0%, rgba(185, 28, 28, 0.2) 100%); border: 1px solid rgba(239, 68, 68, 0.6); color: #fca5a5; padding: 8px 10px; font-size: 11px; font-weight: 800; border-radius: 8px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;">
       🚩 Report Phishing Threat
     </button>
   ` : '';
 
   // AI Security Chatbot Panel HTML (ONLY rendered when threat or suspicious indicators exist)
   const chatbotPanelHtml = (isHigh || isSuspicious) ? `
-    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
-      <button id="pg-toggle-chatbot-btn" style="width: 100%; background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #3b82f6; color: #60a5fa; padding: 9px; font-size: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);">
+    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;">
+      <button id="pg-toggle-chatbot-btn" style="width: 100%; background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #3b82f6; color: #60a5fa; padding: 8px; font-size: 11.5px; font-weight: 800; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);">
         🤖 Ask AI Security Assistant
       </button>
 
-      <div id="pg-chatbot-box" style="display: none; margin-top: 10px; background: rgba(2, 6, 23, 0.9); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 12px; font-size: 12px;">
-        <div id="pg-chat-history" style="max-height: 160px; overflow-y: auto; margin-bottom: 10px; color: #94a3b8; font-size: 11.5px; padding-right: 4px;">
+      <div id="pg-chatbot-box" style="display: none; margin-top: 8px; background: rgba(2, 6, 23, 0.92); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 10px; font-size: 11.5px;">
+        <div id="pg-chat-history" style="max-height: 130px; overflow-y: auto; margin-bottom: 8px; color: #94a3b8; font-size: 11px; padding-right: 4px;">
           <div style="color: #60a5fa; margin-bottom: 6px; line-height: 1.4;"><strong>AI Assistant:</strong> Hello! Ask me anything about this security threat or what to do next.</div>
         </div>
 
-        <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap;">
-          <button class="pg-quick-q" data-q="Why is this site dangerous?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Why is this dangerous?</button>
-          <button class="pg-quick-q" data-q="Is this really PayPal?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Is this really PayPal?</button>
-          <button class="pg-quick-q" data-q="Where does my password go?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Where does password go?</button>
-          <button class="pg-quick-q" data-q="What is Form Origin Mismatch?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What is Origin Mismatch?</button>
-          <button class="pg-quick-q" data-q="What should I do next?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 10px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What should I do next?</button>
+        <div style="display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap;">
+          <button class="pg-quick-q" data-q="Why is this site dangerous?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 9.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Why is this dangerous?</button>
+          <button class="pg-quick-q" data-q="Is this really PayPal?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 9.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Is this really PayPal?</button>
+          <button class="pg-quick-q" data-q="Where does my password go?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 9.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">Where does password go?</button>
+          <button class="pg-quick-q" data-q="What is Form Origin Mismatch?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 9.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What is Origin Mismatch?</button>
+          <button class="pg-quick-q" data-q="What should I do next?" style="background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 9.5px; padding: 4px 7px; border-radius: 6px; cursor: pointer; font-weight: 600;">What should I do next?</button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <textarea id="pg-chat-input" placeholder="Type your question for the AI Security Assistant..." style="width: 100%; background: #0f172a; border: 1.5px solid #3b82f6; color: #ffffff; padding: 9px 11px; border-radius: 8px; font-size: 12px; min-height: 50px; resize: vertical; box-sizing: border-box; outline: none; font-family: inherit; line-height: 1.4;"></textarea>
-          <button id="pg-chat-send" style="width: 100%; background: #2563eb; color: white; border: none; padding: 9px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <textarea id="pg-chat-input" placeholder="Type your question for the AI Security Assistant..." style="width: 100%; background: #0f172a; border: 1.5px solid #3b82f6; color: #ffffff; padding: 8px 10px; border-radius: 7px; font-size: 11px; height: 42px; min-height: 42px; resize: none; box-sizing: border-box; outline: none; font-family: inherit; line-height: 1.4;"></textarea>
+          <button id="pg-chat-send" style="width: 100%; background: #2563eb; color: white; border: none; padding: 8px; border-radius: 7px; font-weight: 800; cursor: pointer; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
             🚀 Send Question
           </button>
         </div>
@@ -190,10 +226,10 @@ function showRichSecurityCard(data) {
   ` : '';
 
   toast.innerHTML = `
-    <div style="background: rgba(10, 15, 30, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid ${statusColor}88; border-radius: 14px; padding: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 25px ${statusColor}33; color: #f8fafc; width: 360px; max-width: 92vw; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box;">
+    <div id="pg-toast-inner" style="background: rgba(10, 15, 30, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid ${statusColor}88; border-radius: 14px; padding: 13px; box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 25px ${statusColor}33; color: #f8fafc; width: 360px; max-width: 92vw; max-height: calc(100vh - 32px); overflow-y: auto; overflow-x: hidden; font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.45) rgba(15, 23, 42, 0.6); overscroll-behavior: contain;">
       
       <!-- Top Cyber Status Bar -->
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; box-shadow: 0 0 8px ${statusColor};"></span>
           <span style="font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: ${statusColor};">${title}</span>
@@ -202,7 +238,7 @@ function showRichSecurityCard(data) {
       </div>
 
       <!-- HUD Gauge Header (Exact match to popup HUD) -->
-      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(148, 163, 184, 0.12);">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(148, 163, 184, 0.12);">
         <div style="position: relative; width: 66px; height: 66px; flex-shrink: 0;">
           <svg width="66" height="66" viewBox="0 0 68 68">
             <circle cx="34" cy="34" r="28" fill="none" stroke="#1e293b" stroke-width="5" />
@@ -227,32 +263,32 @@ function showRichSecurityCard(data) {
       </div>
 
       <!-- Scanned Target Box -->
-      <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Scanned Target</div>
-      <div style="background: #020617; border: 1px solid #1e293b; border-radius: 6px; padding: 6px 9px; font-family: monospace; font-size: 10px; color: #93c5fd; word-break: break-all; margin-bottom: 8px;">${window.location.href}</div>
+      <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 0.5px;">Scanned Target</div>
+      <div style="background: #020617; border: 1px solid #1e293b; border-radius: 6px; padding: 5px 8px; font-family: monospace; font-size: 9.5px; color: #93c5fd; word-break: break-all; margin-bottom: 6px;">${window.location.href}</div>
 
       <!-- Telemetry Matrix Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px;">
-        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
-          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Domain Root</div>
-          <div style="font-size: 10.5px; font-weight: 700; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${rootDomain}</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 4px 6px;">
+          <div style="font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 700;">Domain Root</div>
+          <div style="font-size: 10px; font-weight: 700; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${rootDomain}</div>
         </div>
-        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
-          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">TLD Status</div>
-          <div style="font-size: 10.5px; font-weight: 700; color: ${tld === '.xyz' || tld === '.top' ? '#ef4444' : '#f1f5f9'};">${tld}</div>
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 4px 6px;">
+          <div style="font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 700;">TLD Status</div>
+          <div style="font-size: 10px; font-weight: 700; color: ${tld === '.xyz' || tld === '.top' ? '#ef4444' : '#f1f5f9'};">${tld}</div>
         </div>
-        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
-          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Transport Security</div>
-          <div style="font-size: 10.5px; font-weight: 700; color: ${protocol === 'HTTP' ? '#f59e0b' : '#10b981'};">${protocol}</div>
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 4px 6px;">
+          <div style="font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 700;">Transport Security</div>
+          <div style="font-size: 10px; font-weight: 700; color: ${protocol === 'HTTP' ? '#f59e0b' : '#10b981'};">${protocol}</div>
         </div>
-        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 5px 7px;">
-          <div style="font-size: 8.5px; color: #64748b; text-transform: uppercase; font-weight: 700;">Policy Decision</div>
-          <div style="font-size: 10.5px; font-weight: 800; color: ${statusColor};">${isHigh ? 'BLOCK_CREDENTIALS' : 'ALLOW_NAVIGATION'}</div>
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; border-radius: 6px; padding: 4px 6px;">
+          <div style="font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 700;">Policy Decision</div>
+          <div style="font-size: 10px; font-weight: 800; color: ${statusColor};">${isHigh ? 'BLOCK_CREDENTIALS' : 'ALLOW_NAVIGATION'}</div>
         </div>
       </div>
 
       <!-- Telemetry Breakdown -->
-      <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">Telemetry Breakdown</div>
-      <div style="background: rgba(2, 6, 23, 0.6); border: 1px solid #1e293b; border-radius: 6px; padding: 7px 9px; margin-bottom: 10px;">
+      <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 0.5px;">Telemetry Breakdown</div>
+      <div class="pg-evidence-scroll" style="background: rgba(2, 6, 23, 0.6); border: 1px solid #1e293b; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; max-height: 85px; overflow-y: auto;">
         ${evidenceItemsHtml}
       </div>
 
@@ -298,7 +334,19 @@ function showRichSecurityCard(data) {
 
   toggleChatBtn?.addEventListener('click', () => {
     cancelAutoDismiss();
-    if (chatBox) chatBox.style.display = chatBox.style.display === 'none' ? 'block' : 'none';
+    if (chatBox) {
+      const isOpening = chatBox.style.display === 'none';
+      chatBox.style.display = isOpening ? 'block' : 'none';
+      if (isOpening) {
+        setTimeout(() => {
+          const toastInner = document.getElementById('pg-toast-inner');
+          if (toastInner) {
+            toastInner.scrollTo({ top: toastInner.scrollHeight, behavior: 'smooth' });
+          }
+          chatInput?.focus();
+        }, 100);
+      }
+    }
   });
 
   chatInput?.addEventListener('focus', cancelAutoDismiss);
@@ -422,6 +470,13 @@ function showRichSecurityCard(data) {
     chatHistory.appendChild(aiMsg);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 
+    setTimeout(() => {
+      const toastInner = document.getElementById('pg-toast-inner');
+      if (toastInner) {
+        toastInner.scrollTo({ top: toastInner.scrollHeight, behavior: 'smooth' });
+      }
+    }, 80);
+
     // Send query to background service worker (which talks to port 8007)
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({
@@ -434,6 +489,10 @@ function showRichSecurityCard(data) {
         if (res && res.status === 'ok' && res.response_text) {
           aiMsg.innerHTML = `<strong>AI Assistant:</strong> ${res.response_text.replace(/\n/g, '<br>')}`;
           chatHistory.scrollTop = chatHistory.scrollHeight;
+          const toastInner = document.getElementById('pg-toast-inner');
+          if (toastInner) {
+            toastInner.scrollTo({ top: toastInner.scrollHeight, behavior: 'smooth' });
+          }
         }
       });
     }
@@ -454,6 +513,10 @@ function showRichSecurityCard(data) {
       if (resData && resData.response_text) {
         aiMsg.innerHTML = `<strong>AI Assistant:</strong> ${resData.response_text.replace(/\n/g, '<br>')}`;
         chatHistory.scrollTop = chatHistory.scrollHeight;
+        const toastInner = document.getElementById('pg-toast-inner');
+        if (toastInner) {
+          toastInner.scrollTo({ top: toastInner.scrollHeight, behavior: 'smooth' });
+        }
       }
     })
     .catch(() => {});
